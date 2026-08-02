@@ -681,7 +681,7 @@
     function startGame() {
       if (gameStarted || isGameOver) return;
 
-      const ctx = getAudioContext();
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
       if (ctx && ctx.state === 'suspended') {
         ctx.resume().catch(() => {});
       }
