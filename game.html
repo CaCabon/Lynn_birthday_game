@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>守護最可愛的妳：生日戰機</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: "Segoe UI", "Noto Sans TC", sans-serif;
+      background: #120c2a;
+      touch-action: none;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, #140d2f 0%, #271748 25%, #17172b 58%, #0f1735 100%);
+    }
+
+    #bg-layer {
+      position: absolute;
+      inset: -20% 0 0 0;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255,255,255,0.23), transparent 12%),
+        radial-gradient(circle at 72% 30%, rgba(255,255,255,0.18), transparent 12%),
+        radial-gradient(circle at 55% 55%, rgba(255,255,255,0.12), transparent 16%),
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0) 30%);
+      animation: bgMove 11s linear infinite;
+      opacity: 0.9;
+    }
+
+    @keyframes bgMove {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(130px); }
+    }
+
+    #hud {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      z-index: 30;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .hud-box {
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 15px;
+      font-weight: 800;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+      backdrop-filter: blur(8px);
+    }
+
+    #progress-wrap {
+      position: absolute;
+      top: 72px;
+      left: 50%;
+      width: 0;
+      height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    #progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #79e3ff, #9affd7, #ffd6f0);
+      border-radius: inherit;
+      transition: width 0.25s ease;
+    }
+
+    .fighter {
+      position: absolute;
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid rgba(255,255,255,0.9);
+      background: white;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.14);
+      z-index: 10;
+    }
+
+    .fighter img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      transform: scale(1);
+      transform-origin: center;
+    }
+
+    .fighter.invincible {
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.8), 0 0 24px rgba(255,255,255,0.45);
+    }
+
+    #player {
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      width: 64px;
+      height: 64px;
+    }
+
+    .enemy-unit {
+      position: absolute;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      overflow: hidden;
+      z-index: 9;
+      border: 3px solid rgba(255,255,255,0.7);
+      box-shadow: 0 10px 18px rgba(0,0,0,0.12);
+      background: #fff;
+    }
+
+    .enemy-unit img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: scale(1);
+      transform-origin: center;
+    }
+
+    .boss {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 4px solid rgba(255,255,255,0.85);
+      box-shadow: 0 14px 30px rgba(255, 94, 154, 0.34);
+      z-index: 15;
+    }
+
+    .boss-name {
+      position: absolute;
+      z-index: 18;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      color: #fff;
+      text-shadow: 0 0 18px rgba(255, 94, 154, 0.9), 0 0 28px rgba(255, 94, 154, 0.6);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .boss img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      border-radius: 50%;
+      transform: scale(1);
+      transform-origin: center;
+    }
+
+    .bullet {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 12;
+      box-shadow: 0 0 10px rgba(255,255,255,0.9);
+    }
+
+    .player-bullet {
+      background: radial-gradient(circle at 30% 30%, #fff 0%, #ffb3d2 30%, #ff4d9a 100%);
+    }
+
+    .enemy-bullet {
+      width: 24px;
+      height: 24px;
+      background: transparent;
+      overflow: hidden;
+      border-radius: 0;
+      box-shadow: none;
+      transform: scale(0.5);
+      transform-origin: center;
+    }
+
+    .enemy-bullet img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    .strawberry {
+      position: absolute;
+      width: 42px;
+      height: 42px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 7;
+      pointer-events: none;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      box-shadow: inset 0 0 14px rgba(255,255,255,0.08);
+      will-change: transform;
+    }
+
+    .strawberry img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 12px;
+      transform: rotate(0deg);
+    }
+
+    .effect {
+      position: absolute;
+      z-index: 20;
+      font-size: 24px;
+      pointer-events: none;
+      animation: floatUp 0.7s ease-out forwards;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(0.8); }
+      100% { opacity: 0; transform: translateY(-24px) scale(1.4); }
+    }
+
+    #boss-bar-wrap {
+      position: absolute;
+      top: 74px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(72vw, 420px);
+      height: 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.16);
+      border: 1px solid rgba(255,255,255,0.24);
+      overflow: hidden;
+      z-index: 36;
+      display: none;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+    }
+
+    #boss-bar {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #ff5e9a, #ff7777, #ffd36e);
+      border-radius: inherit;
+      transition: width 0.15s ease;
+    }
+
+    #boss-name-label {
+      position: absolute;
+      top: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 38;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      color: #fff;
+      text-shadow: 0 0 18px rgba(255, 94, 154, 0.9), 0 0 28px rgba(255, 94, 154, 0.6);
+      white-space: nowrap;
+      pointer-events: none;
+      display: none;
+    }
+
+    #countdown {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 45;
+      background: rgba(9, 7, 18, 0.20);
+      font-weight: 900;
+      font-size: clamp(56px, 12vw, 130px);
+      color: #fff;
+      text-shadow: 0 0 20px rgba(255,255,255,0.6), 0 0 30px rgba(255, 94, 154, 0.6);
+      letter-spacing: 0.1em;
+    }
+
+    #wave-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      z-index: 35;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      padding: 12px 22px;
+      border-radius: 999px;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
+    }
+
+    #warning {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(4px);
+      text-align: center;
+    }
+
+    #warning.visible {
+      display: flex;
+    }
+
+    .warning-text {
+      font-size: clamp(30px, 7vw, 72px);
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(255, 94, 154, 0.8), 0 0 40px rgba(255, 94, 154, 0.45);
+      animation: warningFlash 0.6s steps(2) infinite alternate;
+    }
+
+    @keyframes warningFlash {
+      0% { opacity: 0.7; transform: scale(0.96); }
+      100% { opacity: 1; transform: scale(1.04); }
+    }
+
+    #modal {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      background: rgba(0, 0, 0, 0.72);
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+
+    .modal-box {
+      width: min(420px, 92vw);
+      background: rgba(255,255,255,0.96);
+      border-radius: 24px;
+      box-shadow: 0 18px 38px rgba(0,0,0,0.22);
+      padding: 24px 18px 18px;
+      text-align: center;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      color: #d63384;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .modal-text {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+      margin: 8px 0 14px;
+    }
+
+    iframe {
+      width: 100%;
+      height: 200px;
+      border: 0;
+      border-radius: 14px;
+      display: block;
+      margin-top: 12px;
+      background: #000;
+    }
+
+    .modal-btn {
+      margin-top: 14px;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #ff5e9a, #ff7eb7);
+      color: white;
+      font-size: 16px;
+      font-weight: 800;
+      padding: 12px 24px;
+      cursor: pointer;
+      box-shadow: 0 12px 20px rgba(255, 94, 154, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="bg-layer"></div>
+
+    <div id="hud">
+      <div class="hud-box">❤️ 生命: <span id="hp">5</span></div>
+      <div class="hud-box">🔒 狀態: <span id="state-label">戰鬥中</span></div>
+    </div>
+
+    <div id="boss-name-label">邪惡的ㄨ翔</div>
+    <div id="boss-bar-wrap">
+      <div id="boss-bar"></div>
+    </div>
+
+    <div id="countdown">3</div>
+    <div id="wave-message">第 1 / 5 波</div>
+
+    <div id="warning" aria-live="assertive">
+      <div class="warning-text">WARNING</div>
+    </div>
+
+    <div id="player" class="fighter">
+      <img src="女主素材1.jpg" alt="玩家" />
+    </div>
+
+    <div id="modal">
+      <div class="modal-box">
+        <div class="modal-title" id="modal-title">🎉 你贏了！</div>
+        <div class="modal-text" id="modal-text">恭喜妳成功通關，來聽個歌吧！</div>
+        <iframe id="youtube-player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        <button class="modal-btn" onclick="location.reload()">再玩一次 🔁</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const youtubeVideoId = "pIVa10DbCL0";
+    const maxHp = 5;
+    const totalWaves = 5;
+    const obstacleImages = ["strawberry1.png", "strawberry2.png", "strawberry3.png", "strawberry4.png", "strawberry5.png"];
+
+    const game = document.getElementById('game-container');
+    const hpEl = document.getElementById('hp');
+    const stateLabel = document.getElementById('state-label');
+    const countdownEl = document.getElementById('countdown');
+    const waveMessageEl = document.getElementById('wave-message');
+    const warningEl = document.getElementById('warning');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalText = document.getElementById('modal-text');
+    const youtubePlayer = document.getElementById('youtube-player');
+    const playerEl = document.getElementById('player');
+    const bossBarWrap = document.getElementById('boss-bar-wrap');
+    const bossBar = document.getElementById('boss-bar');
+    const bossNameLabel = document.getElementById('boss-name-label');
+
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioCtor = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtor) {
+          audioCtx = new AudioCtor();
+        }
+      }
+      return audioCtx;
+    }
+
+    function playTone({ frequency = 440, duration = 0.12, type = 'sine', volume = 0.08, slideTo = null }) {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
+      if (slideTo) oscillator.frequency.linearRampToValueAtTime(slideTo, ctx.currentTime + duration);
+
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(volume, ctx.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + duration);
+    }
+
+    function playSoundFile(fileName, volume) {
+      try {
+        const audio = new Audio(fileName);
+        audio.volume = volume;
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      } catch (error) {
+        console.warn('Audio file could not be played:', fileName, error);
+      }
+    }
+
+    function playSoundEffect(name) {
+      if (name === 'enemyDie') {
+        playSoundFile('敵人音效.m4a', 0.9);
+        return;
+      }
+      if (name === 'bossDie') {
+        playSoundFile('Boss音效.m4a', 2.0);
+        return;
+      }
+    }
+
+    const player = {
+      x: window.innerWidth / 2 - 32,
+      y: window.innerHeight - 120,
+      w: 64,
+      h: 64,
+      speed: 4.8,
+      fireCooldown: (504 / 1.6) / 1.2,
+      invincibleUntil: 0
+    };
+
+    let hp = maxHp;
+    let currentWave = 0;
+    let boss = null;
+    let bossSpawned = false;
+    let isGameOver = false;
+    let pointerActive = false;
+    let lastShotAt = 0;
+    let strawberrySpawnTimer = 0;
+    let gameStarted = false;
+    let isWaveTransitioning = false;
+    let waveSpawnedTotal = 0;
+    let waveHasSpawned = false;
+    let strawberry = null;
+
+    const playerBullets = [];
+    const enemyBullets = [];
+    const enemies = [];
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function setPlayerPosition(x, y) {
+      player.x = clamp(x, 10, window.innerWidth - player.w - 10);
+      player.y = clamp(y, 80, window.innerHeight - player.h - 10);
+      playerEl.style.left = player.x + 'px';
+      playerEl.style.top = player.y + 'px';
+    }
+
+    function updateHud() {
+      hpEl.textContent = hp;
+      stateLabel.textContent = boss ? 'BOSS 戰鬥' : '戰鬥中';
+    }
+
+    function createEffect(x, y, text) {
+      const effect = document.createElement('div');
+      effect.className = 'effect';
+      effect.textContent = text;
+      effect.style.left = x + 'px';
+      effect.style.top = y + 'px';
+      game.appendChild(effect);
+      setTimeout(() => effect.remove(), 700);
+    }
+
+    function updateBossBar() {
+      if (!boss) {
+        bossBarWrap.style.display = 'none';
+        bossBar.style.width = '0%';
+        bossNameLabel.style.display = 'none';
+        return;
+      }
+
+      bossBarWrap.style.display = 'block';
+      bossNameLabel.style.display = 'block';
+      const pct = Math.max(0, (boss.hp / boss.maxHp) * 100);
+      bossBar.style.width = pct + '%';
+    }
+
+    function showWaveMessage(text, onComplete) {
+      waveMessageEl.textContent = text;
+      waveMessageEl.style.display = 'block';
+      setTimeout(() => {
+        waveMessageEl.style.display = 'none';
+        if (typeof onComplete === 'function') onComplete();
+      }, 1200);
+    }
+
+    function startCountdown() {
+      let count = 3;
+      countdownEl.textContent = count;
+      const timer = setInterval(() => {
+        count -= 1;
+        if (count > 0) {
+          countdownEl.textContent = count;
+        } else if (count === 0) {
+          countdownEl.textContent = '開始';
+        } else {
+          clearInterval(timer);
+          countdownEl.style.display = 'none';
+          gameStarted = true;
+          startWave();
+        }
+      }, 1000);
+    }
+
+    function startWave() {
+      if (isGameOver || !gameStarted || isWaveTransitioning) return;
+      if (currentWave >= totalWaves) return;
+
+      currentWave += 1;
+      waveSpawnedTotal = currentWave;
+      waveHasSpawned = false;
+      showWaveMessage(`第 ${currentWave} / ${totalWaves} 波`, () => {
+        spawnWaveEnemies(currentWave);
+        waveHasSpawned = true;
+      });
+    }
+
+    function queueNextWave() {
+      if (isGameOver || bossSpawned || isWaveTransitioning) return;
+      isWaveTransitioning = true;
+      setTimeout(() => {
+        isWaveTransitioning = false;
+        if (!isGameOver && !bossSpawned) {
+          startWave();
+        }
+      }, 2000);
+    }
+
+    function queueBossAfterFinalWave() {
+      if (isGameOver || bossSpawned || isWaveTransitioning) return;
+      isWaveTransitioning = true;
+      setTimeout(() => {
+        isWaveTransitioning = false;
+        if (!isGameOver && !bossSpawned) {
+          triggerWarningAndBoss();
+        }
+      }, 2000);
+    }
+
+    function spawnWaveEnemies(enemyCount) {
+      const maxY = Math.max(60, window.innerHeight * 0.5 - 30);
+      for (let i = 0; i < enemyCount; i++) {
+        const x = 30 + Math.random() * (window.innerWidth - 120);
+        const y = 50 + Math.random() * (maxY - 50);
+        spawnEnemy(x, y);
+      }
+    }
+
+    function checkWaveProgress() {
+      if (!gameStarted || isGameOver || bossSpawned) return;
+      if (currentWave === 0) return;
+      if (!waveHasSpawned) return;
+
+      const remainingCurrentWaveEnemies = enemies.filter(enemy => enemy.wave === currentWave).length;
+      if (remainingCurrentWaveEnemies === 0 && waveSpawnedTotal > 0 && !isWaveTransitioning) {
+        if (currentWave >= totalWaves) {
+          queueBossAfterFinalWave();
+        } else {
+          queueNextWave();
+        }
+      }
+    }
+
+    function spawnEnemy(x, y) {
+      const enemyNode = document.createElement('div');
+      enemyNode.className = 'enemy-unit';
+      enemyNode.innerHTML = '<img src="男主素材2.jpg" alt="敵人" />';
+      enemyNode.style.left = x + 'px';
+      enemyNode.style.top = y + 'px';
+      game.appendChild(enemyNode);
+
+      const enemy = {
+        x,
+        y,
+        w: 72 * 1.3 * 1.5,
+        h: 72 * 1.3 * 1.5,
+        wave: currentWave,
+        speedX: ((Math.random() * 1.8 + 0.9) ) * (Math.random() > 0.5 ? 1 : -1),
+        speedY: ((Math.random() * 0.7 + 0.5) ) * (Math.random() > 0.5 ? 1 : -1),
+        el: enemyNode,
+        hp: 10,
+        shootDelay: (1400 + Math.random() * 700) * 1.6,
+        lastShot: performance.now() + Math.random() * 1000
+      };
+
+      enemies.push(enemy);
+    }
+
+    function triggerWarningAndBoss() {
+      if (bossSpawned || isGameOver) return;
+      bossSpawned = true;
+      warningEl.classList.add('visible');
+      setTimeout(() => {
+        warningEl.classList.remove('visible');
+        spawnBoss();
+      }, 1800);
+    }
+
+    function spawnBoss() {
+      const bossNode = document.createElement('div');
+      bossNode.className = 'boss';
+      bossNode.innerHTML = '<img src="男主素材2.jpg" alt="Boss" />';
+      bossNode.style.left = (window.innerWidth / 2 - 75) + 'px';
+      bossNode.style.top = '70px';
+      game.appendChild(bossNode);
+
+      boss = {
+        x: window.innerWidth / 2 - 75,
+        y: 70,
+        w: 150,
+        h: 150,
+        hp: 100,
+        maxHp: 100,
+        speedX: 2.8,
+        direction: 1,
+        el: bossNode,
+        fireTimer: 0,
+        firePatternTimer: 0,
+        trackingTimer: 0,
+        attackMode: 'radial'
+      };
+      updateHud();
+      updateBossBar();
+    }
+
+    function shootPlayerBullet() {
+      const now = performance.now();
+      if (now - lastShotAt < player.fireCooldown || isGameOver) return;
+      lastShotAt = now;
+
+      const bullet = document.createElement('div');
+      bullet.className = 'bullet player-bullet';
+      const x = player.x + player.w / 2 - 6;
+      const y = player.y - 12;
+      bullet.style.left = x + 'px';
+      bullet.style.top = y + 'px';
+      game.appendChild(bullet);
+
+      playerBullets.push({
+        x,
+        y,
+        w: 12,
+        h: 12,
+        vy: -7,
+        el: bullet
+      });
+    }
+
+    function fireEnemyBurst(enemyObj) {
+      const centerX = enemyObj.x + enemyObj.w / 2;
+      const centerY = enemyObj.y + enemyObj.h / 2;
+      const count = 4;
+      const speed = (3.1 * 0.6) * 2;
+
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 / count) * i + (Math.PI / count);
+        const bullet = document.createElement('div');
+        bullet.className = 'bullet enemy-bullet';
+        bullet.innerHTML = '<img src="heart.png" alt="heart" />';
+        bullet.style.left = (centerX - 12) + 'px';
+        bullet.style.top = (centerY - 12) + 'px';
+        game.appendChild(bullet);
+
+        enemyBullets.push({
+          x: centerX - 12,
+          y: centerY - 12,
+          w: 24,
+          h: 24,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          el: bullet,
+          life: 9999
+        });
+      }
+    }
+
+    function fireBossRadialBurst() {
+      if (!boss) return;
+      const centerX = boss.x + boss.w / 2;
+      const centerY = boss.y + boss.h / 2;
+      const count = 8;
+      const speed = ((3.1 * 0.6) * 2) * 1.2;
+
+      const shootRow = (delayMs, rowOffset) => {
+        setTimeout(() => {
+          for (let i = 0; i < count; i++) {
+            const angle = (Math.PI * 2 / count) * i + (Math.PI / count) + rowOffset;
+            const bullet = document.createElement('div');
+            bullet.className = 'bullet enemy-bullet';
+            bullet.innerHTML = '<img src="heart.png" alt="heart" />';
+            bullet.style.left = (centerX - 12) + 'px';
+            bullet.style.top = (centerY - 12) + 'px';
+            game.appendChild(bullet);
+
+            enemyBullets.push({
+              x: centerX - 12,
+              y: centerY - 12,
+              w: 24,
+              h: 24,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              el: bullet,
+              life: 9999,
+              tracking: false
+            });
+          }
+        }, delayMs);
+      };
+
+      shootRow(0, 0);
+      shootRow(500, 0.2);
+    }
+
+    function fireBossStraightBurst() {
+      if (!boss) return;
+      const centerX = boss.x + boss.w / 2;
+      const centerY = boss.y + boss.h / 2;
+      const count = 8;
+      const speed = ((3.1 * 0.6) * 2) * 1.2;
+
+      const shootRow = (delayMs, rowShift) => {
+        setTimeout(() => {
+          for (let i = 0; i < count; i++) {
+            const dx = player.x + player.w / 2 - centerX;
+            const dy = player.y + player.h / 2 - centerY;
+            const angle = Math.atan2(dy, dx) + (i - (count - 1) / 2) * (0.15 + 10 * Math.PI / 180) + rowShift;
+            const bullet = document.createElement('div');
+            bullet.className = 'bullet enemy-bullet';
+            bullet.innerHTML = '<img src="heart.png" alt="heart" />';
+            bullet.style.left = (centerX - 12) + 'px';
+            bullet.style.top = (centerY - 12) + 'px';
+            game.appendChild(bullet);
+
+            enemyBullets.push({
+              x: centerX - 12,
+              y: centerY - 12,
+              w: 24,
+              h: 24,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              el: bullet,
+              life: 9999,
+              tracking: false
+            });
+          }
+        }, delayMs);
+      };
+
+      shootRow(0, 0);
+      shootRow(500, 0.2);
+    }
+
+    function fireBossTrackingBurst() {
+      if (!boss) return;
+      const centerX = boss.x + boss.w / 2;
+      const centerY = boss.y + boss.h / 2;
+      const speed = 1.8;
+
+      for (let i = 0; i < 2; i++) {
+        const bullet = document.createElement('div');
+        bullet.className = 'bullet enemy-bullet';
+        bullet.innerHTML = '<img src="heart.png" alt="heart" />';
+        bullet.style.left = (centerX - 18) + 'px';
+        bullet.style.top = (centerY - 18) + 'px';
+        game.appendChild(bullet);
+
+        enemyBullets.push({
+          x: centerX - 18,
+          y: centerY - 18,
+          w: 36,
+          h: 36,
+          vx: 0,
+          vy: 0,
+          el: bullet,
+          life: 8,
+          tracking: true,
+          speed,
+          turnRate: 0.05,
+          size: 36
+        });
+      }
+    }
+
+    function scheduleStrawberrySpawn() {
+      strawberrySpawnTimer = 10 + Math.random() * 10;
+    }
+
+    function spawnStrawberry() {
+      if (strawberry) return;
+
+      const imgIndex = Math.floor(Math.random() * obstacleImages.length);
+      const node = document.createElement('div');
+      node.className = 'strawberry';
+      node.innerHTML = '<img src="' + obstacleImages[imgIndex] + '" alt="草莓" />';
+
+      const maxY = Math.max(90, window.innerHeight * 0.7);
+      const x = 20 + Math.random() * (window.innerWidth - 100);
+      const y = 90 + Math.random() * (maxY - 90);
+      const drift = (Math.random() * 0.8 + 0.3) * (Math.random() > 0.5 ? 1 : -1);
+
+      node.style.left = x + 'px';
+      node.style.top = y + 'px';
+      node.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+      game.appendChild(node);
+
+      strawberry = {
+        x,
+        y,
+        w: 42,
+        h: 42,
+        vx: drift * 0.35,
+        vy: (Math.random() * 0.5 + 0.2) * (Math.random() > 0.5 ? 1 : -1),
+        rotation: Math.random() * 360,
+        driftPhase: Math.random() * Math.PI * 2,
+        life: 10,
+        el: node
+      };
+    }
+
+    function rectsOverlap(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+
+    function updatePlayerInvincibilityVisual() {
+      if (!player.invincibleUntil || performance.now() >= player.invincibleUntil) {
+        playerEl.style.opacity = '1';
+        playerEl.style.filter = 'none';
+        playerEl.classList.remove('invincible');
+        return;
+      }
+
+      const flickerOn = Math.floor(performance.now() / 120) % 2 === 0;
+      playerEl.classList.add('invincible');
+      playerEl.style.opacity = flickerOn ? '0.5' : '1';
+      playerEl.style.filter = flickerOn ? 'brightness(1.3)' : 'none';
+    }
+
+    function takeHit() {
+      const now = performance.now();
+      if (now < player.invincibleUntil) return;
+
+      player.invincibleUntil = now + 2000;
+      hp -= 1;
+      createEffect(player.x + player.w / 2 - 12, player.y + 10, '💔');
+      updateHud();
+      updatePlayerInvincibilityVisual();
+
+      if (hp <= 0) {
+        endGame(false);
+      }
+    }
+
+    function endGame(win) {
+      if (isGameOver) return;
+      isGameOver = true;
+      modal.style.display = 'flex';
+      warningEl.classList.remove('visible');
+
+      if (win) {
+        modalTitle.textContent = '🎉 BOSS 已擊敗！';
+        modalText.textContent = '太厲害了！妳成功擊敗了邪惡的ㄨ翔，現在來聽首歌吧！';
+      } else {
+        modalTitle.textContent = '💔 失敗了';
+        modalText.textContent = '別灰心，再試一次，讓ㄨ翔知道妳最厲害啦！';
+      }
+
+      youtubePlayer.src = `https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&rel=0`;
+    }
+
+    function handlePointerMove(event) {
+      const rect = game.getBoundingClientRect();
+      const x = event.clientX - rect.left - player.w / 2;
+      const y = event.clientY - rect.top - player.h / 2;
+      setPlayerPosition(x, y);
+    }
+
+    game.addEventListener('pointerdown', (event) => {
+      pointerActive = true;
+      handlePointerMove(event);
+      shootPlayerBullet();
+    });
+
+    game.addEventListener('pointermove', (event) => {
+      if (pointerActive) {
+        handlePointerMove(event);
+      }
+    });
+
+    game.addEventListener('pointerup', () => {
+      pointerActive = false;
+    });
+
+    game.addEventListener('pointerleave', () => {
+      pointerActive = false;
+    });
+
+    window.addEventListener('keydown', (event) => {
+      const key = event.key.toLowerCase();
+      if (key === 'arrowleft' || key === 'a') player.x -= player.speed;
+      if (key === 'arrowright' || key === 'd') player.x += player.speed;
+      if (key === 'arrowup' || key === 'w') player.y -= player.speed;
+      if (key === 'arrowdown' || key === 's') player.y += player.speed;
+      if (event.code === 'Space') shootPlayerBullet();
+      setPlayerPosition(player.x, player.y);
+    });
+
+    function update(dt) {
+      if (isGameOver) return;
+
+      updatePlayerInvincibilityVisual();
+
+      if (gameStarted && currentWave === 0 && enemies.length === 0) {
+        startWave();
+      }
+
+      checkWaveProgress();
+
+      if (boss && boss.hp > 0) {
+        boss.x += boss.speedX * boss.direction * dt * 60;
+        if (boss.x <= 20 || boss.x >= window.innerWidth - boss.w - 20) {
+          boss.direction *= -1;
+          boss.x = clamp(boss.x, 20, window.innerWidth - boss.w - 20);
+        }
+        boss.el.style.left = boss.x + 'px';
+        boss.el.style.top = boss.y + 'px';
+        boss.fireTimer -= dt * 1000;
+        boss.firePatternTimer -= dt * 1000;
+        boss.trackingTimer -= dt * 1000;
+
+        if (boss.firePatternTimer <= 0) {
+          boss.attackMode = Math.random() < 0.5 ? 'radial' : 'straight';
+          boss.firePatternTimer = 2000;
+        }
+
+        if (boss.fireTimer <= 0) {
+          if (boss.attackMode === 'radial') {
+            fireBossRadialBurst();
+          } else {
+            fireBossStraightBurst();
+          }
+          boss.fireTimer = 2000;
+        }
+
+        if (boss.trackingTimer <= 0) {
+          fireBossTrackingBurst();
+          boss.trackingTimer = 8000;
+        }
+      }
+
+      if (pointerActive) {
+        shootPlayerBullet();
+      }
+
+      if (!strawberry) {
+        strawberrySpawnTimer -= dt;
+        if (strawberrySpawnTimer <= 0) {
+          spawnStrawberry();
+          strawberrySpawnTimer = 0;
+        }
+      }
+
+      if (strawberry) {
+        strawberry.life -= dt;
+        strawberry.driftPhase += dt * 2.2;
+        strawberry.x += Math.sin(strawberry.driftPhase) * 0.25 + strawberry.vx;
+        strawberry.y += Math.cos(strawberry.driftPhase * 1.5) * 0.2 + strawberry.vy;
+
+        const maxX = window.innerWidth - strawberry.w - 10;
+        const minX = 10;
+        const maxY = Math.max(90, window.innerHeight * 0.7 - strawberry.h);
+        const minY = 90;
+
+        if (strawberry.x <= minX) {
+          strawberry.x = minX;
+          strawberry.vx *= -1;
+        }
+        if (strawberry.x >= maxX) {
+          strawberry.x = maxX;
+          strawberry.vx *= -1;
+        }
+        if (strawberry.y <= minY) {
+          strawberry.y = minY;
+          strawberry.vy *= -1;
+        }
+        if (strawberry.y >= maxY) {
+          strawberry.y = maxY;
+          strawberry.vy *= -1;
+        }
+
+        strawberry.rotation += 14 * dt;
+        strawberry.el.style.left = strawberry.x + 'px';
+        strawberry.el.style.top = strawberry.y + 'px';
+        strawberry.el.style.transform = 'rotate(' + strawberry.rotation + 'deg)';
+
+        const strawberryBox = { x: strawberry.x, y: strawberry.y, w: strawberry.w, h: strawberry.h };
+        const playerBox = { x: player.x, y: player.y, w: player.w, h: player.h };
+
+        if (rectsOverlap(strawberryBox, playerBox)) {
+          strawberry.el.remove();
+          strawberry = null;
+          hp += 1;
+          updateHud();
+          createEffect(player.x + player.w / 2, player.y, '❤️');
+          scheduleStrawberrySpawn();
+        } else if (strawberry.life <= 0) {
+          strawberry.el.remove();
+          strawberry = null;
+          scheduleStrawberrySpawn();
+        }
+      }
+
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const enemyObj = enemies[i];
+        enemyObj.x += enemyObj.speedX * dt * 60;
+        enemyObj.y += enemyObj.speedY * dt * 60;
+
+        if (enemyObj.x <= 10 || enemyObj.x >= window.innerWidth - enemyObj.w - 10) {
+          enemyObj.speedX *= -1;
+        }
+
+        const upperLimit = Math.max(60, window.innerHeight * 0.5 - 10);
+        if (enemyObj.y <= 50 || enemyObj.y >= upperLimit) {
+          enemyObj.speedY *= -1;
+        }
+
+        enemyObj.x = clamp(enemyObj.x, 10, window.innerWidth - enemyObj.w - 10);
+        enemyObj.y = clamp(enemyObj.y, 50, upperLimit);
+
+        enemyObj.el.style.left = enemyObj.x + 'px';
+        enemyObj.el.style.top = enemyObj.y + 'px';
+
+        const now = performance.now();
+        if (now - enemyObj.lastShot > enemyObj.shootDelay) {
+          enemyObj.lastShot = now;
+          fireEnemyBurst(enemyObj);
+        }
+      }
+
+      for (let i = playerBullets.length - 1; i >= 0; i--) {
+        const bullet = playerBullets[i];
+        bullet.y += bullet.vy * dt * 60;
+        bullet.el.style.top = bullet.y + 'px';
+
+        let hit = false;
+
+        if (boss && boss.hp > 0) {
+          const bossBox = { x: boss.x, y: boss.y, w: boss.w, h: boss.h };
+          const bulletBox = { x: bullet.x, y: bullet.y, w: bullet.w, h: bullet.h };
+          if (rectsOverlap(bulletBox, bossBox)) {
+            hit = true;
+            boss.hp -= 1;
+            updateBossBar();
+            createEffect(bullet.x, bullet.y, '💥');
+            if (boss.hp <= 0) {
+              boss.el.remove();
+              boss = null;
+              playSoundEffect('bossDie');
+              setTimeout(() => endGame(true), 3000);
+              updateBossBar();
+              return;
+            }
+          }
+        }
+
+        if (!hit) {
+          for (let j = enemies.length - 1; j >= 0; j--) {
+            const enemyObj = enemies[j];
+            const enemyBox = { x: enemyObj.x, y: enemyObj.y, w: enemyObj.w, h: enemyObj.h };
+            const bulletBox = { x: bullet.x, y: bullet.y, w: bullet.w, h: bullet.h };
+            if (rectsOverlap(bulletBox, enemyBox)) {
+              hit = true;
+              enemyObj.hp -= 1;
+              createEffect(bullet.x, bullet.y, '💥');
+              if (enemyObj.hp <= 0) {
+                enemyObj.el.remove();
+                enemies.splice(j, 1);
+                playSoundEffect('enemyDie');
+              }
+              break;
+            }
+          }
+        }
+
+        if (hit) {
+          bullet.el.remove();
+          playerBullets.splice(i, 1);
+          continue;
+        }
+
+        if (bullet.y < -20) {
+          bullet.el.remove();
+          playerBullets.splice(i, 1);
+        }
+      }
+
+      for (let i = enemyBullets.length - 1; i >= 0; i--) {
+        const bullet = enemyBullets[i];
+
+        if (bullet.tracking) {
+          bullet.life -= dt;
+          const dx = player.x + player.w / 2 - (bullet.x + bullet.w / 2);
+          const dy = player.y + player.h / 2 - (bullet.y + bullet.h / 2);
+          const dist = Math.max(1, Math.hypot(dx, dy));
+          const targetVx = (dx / dist) * bullet.speed;
+          const targetVy = (dy / dist) * bullet.speed;
+          bullet.vx += (targetVx - bullet.vx) * 0.08;
+          bullet.vy += (targetVy - bullet.vy) * 0.08;
+          bullet.x += bullet.vx * dt * 60;
+          bullet.y += bullet.vy * dt * 60;
+          bullet.el.style.width = bullet.size + 'px';
+          bullet.el.style.height = bullet.size + 'px';
+          bullet.el.style.left = bullet.x + 'px';
+          bullet.el.style.top = bullet.y + 'px';
+        } else {
+          bullet.x += bullet.vx * dt * 60;
+          bullet.y += bullet.vy * dt * 60;
+          bullet.el.style.left = bullet.x + 'px';
+          bullet.el.style.top = bullet.y + 'px';
+        }
+
+        const hitboxScale = 0.25;
+        const playerBox = {
+          x: player.x + (player.w * (1 - hitboxScale)) / 2,
+          y: player.y + (player.h * (1 - hitboxScale)) / 2,
+          w: player.w * hitboxScale,
+          h: player.h * hitboxScale
+        };
+        const bulletBox = { x: bullet.x, y: bullet.y, w: bullet.w, h: bullet.h };
+
+        if (rectsOverlap(bulletBox, playerBox)) {
+          bullet.el.remove();
+          enemyBullets.splice(i, 1);
+          takeHit();
+          continue;
+        }
+
+        if (bullet.life <= 0 || bullet.x < -50 || bullet.x > window.innerWidth + 50 || bullet.y < -50 || bullet.y > window.innerHeight + 50) {
+          bullet.el.remove();
+          enemyBullets.splice(i, 1);
+        }
+      }
+
+    }
+
+    let lastFrame = performance.now();
+    function gameLoop(now) {
+      const dt = (now - lastFrame) / 1000;
+      lastFrame = now;
+      update(dt);
+      requestAnimationFrame(gameLoop);
+    }
+
+    function initialize() {
+      setPlayerPosition(window.innerWidth / 2 - player.w / 2, window.innerHeight - 120);
+      updateHud();
+      scheduleStrawberrySpawn();
+      startCountdown();
+      requestAnimationFrame(gameLoop);
+    }
+
+    window.addEventListener('resize', () => {
+      setPlayerPosition(player.x, player.y);
+    });
+
+    initialize();
+  </script>
+</body>
+</html>
