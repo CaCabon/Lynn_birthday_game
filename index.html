@@ -624,12 +624,20 @@
       return Math.min(Math.max(value, min), max);
     }
 
-    function setPlayerPosition(x, y) {
-      player.x = clamp(x, 10, window.innerWidth - player.w - 10);
-      player.y = clamp(y, 80, window.innerHeight - player.h - 10);
-      playerEl.style.left = player.x + 'px';
-      playerEl.style.top = player.y + 'px';
-    }
+   function setPlayerPosition(x, y) {
+  // 🔑 核心修正：因為 translateX(-50%) 的關係，player.x 代表照片的「中心點 X 座標」
+  // 1. X 軸邊界：允許移動的最左邊界為半個身寬 (player.w / 2)，最右為 (innerWidth - player.w / 2)
+  const minX = player.w / 2;
+  const maxX = window.innerWidth - player.w / 2;
+  player.x = clamp(x, minX, maxX);
+
+  // 2. Y 軸邊界：Y 軸沒有 translateX，維持原本的上下範圍
+  player.y = clamp(y, 80, window.innerHeight - player.h - 10);
+
+  // 3. 更新 DOM 渲染
+  playerEl.style.left = player.x + 'px';
+  playerEl.style.top = player.y + 'px';
+}
 
     function updateHud() {
       hpEl.textContent = hp;
@@ -1204,7 +1212,7 @@
         strawberry.el.style.transform = 'rotate(' + strawberry.rotation + 'deg)';
 
         const strawberryBox = { x: strawberry.x, y: strawberry.y, w: strawberry.w, h: strawberry.h };
-        const playerBox = { x: player.x-player.w/2, y: player.y-player.h/2, w: player.w, h: player.h };
+        const playerBox = { x: player.x-player.w/1.5, y: player.y-player.h/1.5, w: player.w, h: player.h };
 
         if (rectsOverlap(strawberryBox, playerBox)) {
           strawberry.el.remove();
@@ -1340,12 +1348,13 @@
           bullet.el.style.top = bullet.y + 'px';
         }
 
-        const hitboxScale = 1.0;
+        const hitboxScale = 0.7;
         const playerBox = {
-          x: player.x + (player.w * (1 - hitboxScale)) / 2,
-          y: player.y + (player.h * (1 - hitboxScale)) / 2,
-          w: player.w * hitboxScale,
-          h: player.h * hitboxScale
+  // 把中心點 X 減去半個身寬，還原成左上角 X，並加上 70% 內縮偏移
+  x: (player.x - player.w / 2) + (player.w * (1 - hitboxScale)) / 2,
+  y: player.y + (player.h * (1 - hitboxScale)) / 2,
+  w: player.w * hitboxScale,
+  h: player.h * hitboxScale
         };
         const bulletBox = { x: bullet.x, y: bullet.y, w: bullet.w, h: bullet.h };
 
