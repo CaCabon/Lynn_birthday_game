@@ -823,7 +823,7 @@
         speedX: ((Math.random() * 1.8 + 0.9) ) * (Math.random() > 0.5 ? 1 : -1),
         speedY: ((Math.random() * 0.7 + 0.5) ) * (Math.random() > 0.5 ? 1 : -1),
         el: enemyNode,
-        hp: 10,
+        hp: 3,
         shootDelay: (1400 + Math.random() * 700) * 1.6,
         lastShot: performance.now() + Math.random() * 1000
       };
@@ -854,8 +854,8 @@
         y: 70,
         w: 150,
         h: 150,
-        hp: 100,
-        maxHp: 100,
+        hp: 20,
+        maxHp: 20,
         speedX: 2.8,
         direction: 1,
         el: bossNode,
@@ -1027,7 +1027,7 @@
     }
 
     function scheduleStrawberrySpawn() {
-      strawberrySpawnTimer = 10 + Math.random() * 10;
+      strawberrySpawnTimer =  5 + Math.random() * 5;
     }
 
     function spawnStrawberry() {
