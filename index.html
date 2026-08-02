@@ -492,7 +492,7 @@
     </div>
 
     <div id="player" class="fighter">
-      <img src="女主素材1.jpg" alt="玩家" />
+      <img src="girl.jpg" alt="玩家" />
     </div>
 
     <div id="modal">
@@ -504,6 +504,9 @@
       </div>
     </div>
   </div>
+
+  <audio id="enemy-sound" src="enemy.m4a" preload="auto"></audio>
+  <audio id="boss-sound" src="boss.m4a" preload="auto"></audio>
 
   <script>
     const youtubeVideoId = "pIVa10DbCL0";
@@ -527,6 +530,8 @@
     const bossNameLabel = document.getElementById('boss-name-label');
     const startScreen = document.getElementById('start-screen');
     const startBtn = document.getElementById('start-btn');
+    const enemySound = document.getElementById('enemy-sound');
+    const bossSound = document.getElementById('boss-sound');
 
     let audioCtx = null;
 
@@ -573,11 +578,11 @@
 
     function playSoundEffect(name) {
       if (name === 'enemyDie') {
-        playSoundFile('敵人音效.m4a', 0.9);
+        playSoundFile('enemy.m4a', 0.9);
         return;
       }
       if (name === 'bossDie') {
-        playSoundFile('Boss音效.m4a', 2.0);
+        playSoundFile('boss.m4a', 2.0);
         return;
       }
     }
@@ -686,6 +691,15 @@
         ctx.resume().catch(() => {});
       }
 
+      [enemySound, bossSound].forEach(sound => {
+    if (sound) {
+      sound.play().then(() => {
+        sound.pause();
+        sound.currentTime = 0;
+      }).catch(() => {});
+    }
+  });
+
       startScreen.style.display = 'none';
       startCountdown();
     }
@@ -752,7 +766,7 @@
     function spawnEnemy(x, y) {
       const enemyNode = document.createElement('div');
       enemyNode.className = 'enemy-unit';
-      enemyNode.innerHTML = '<img src="男主素材2.jpg" alt="敵人" />';
+      enemyNode.innerHTML = '<img src="man.jpg" alt="敵人" />';
       enemyNode.style.left = x + 'px';
       enemyNode.style.top = y + 'px';
       game.appendChild(enemyNode);
@@ -787,7 +801,7 @@
     function spawnBoss() {
       const bossNode = document.createElement('div');
       bossNode.className = 'boss';
-      bossNode.innerHTML = '<img src="男主素材2.jpg" alt="Boss" />';
+      bossNode.innerHTML = '<img src="man.jpg" alt="Boss" />';
       bossNode.style.left = (window.innerWidth / 2 - 75) + 'px';
       bossNode.style.top = '70px';
       game.appendChild(bossNode);
