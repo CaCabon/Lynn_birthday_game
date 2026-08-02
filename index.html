@@ -1081,6 +1081,7 @@
     }
 
     function takeHit() {
+      if (isGameOver) return;
       const now = performance.now();
       if (now < player.invincibleUntil) return;
 
@@ -1098,6 +1099,25 @@
     function endGame(win) {
       if (isGameOver) return;
       isGameOver = true;
+
+// 1. 🛡️ 徹底關閉玩家手指輸入（停止發射子彈與移動）
+  pointerActive = false;
+
+  // 2. 🧹 清空畫面上殘留的所有危險物體（避免遊戲暫停瞬間子彈繼續撞擊扣血）
+  enemyBullets.forEach(b => b.el && b.el.remove());
+  enemyBullets = [];
+  
+  playerBullets.forEach(b => b.el && b.el.remove());
+  playerBullets = [];
+
+  enemies.forEach(e => e.el && e.el.remove());
+  enemies = [];
+
+  if (strawberry && strawberry.el) {
+    strawberry.el.remove();
+    strawberry = null;
+  }
+
       modal.style.display = 'flex';
       warningEl.classList.remove('visible');
 
