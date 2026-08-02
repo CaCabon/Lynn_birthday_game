@@ -640,7 +640,7 @@
       return Math.min(Math.max(value, min), max);
     }
 
-   function setPlayerPosition(x, y) {
+    function setPlayerPosition(x, y) {
   // 🔑 核心修正：因為 translateX(-50%) 的關係，player.x 代表照片的「中心點 X 座標」
   // 1. X 軸邊界：允許移動的最左邊界為半個身寬 (player.w / 2)，最右為 (innerWidth - player.w / 2)
   const minX = player.w / 2;
@@ -654,6 +654,16 @@
   playerEl.style.left = player.x + 'px';
   playerEl.style.top = player.y + 'px';
 }
+
+    window.addEventListener('touchmove', function(e) {
+  // 🔑 關鍵：阻止手機瀏覽器拉動圖片或頁面的預設行為
+  e.preventDefault();
+
+  if (e.touches && e.touches[0]) {
+    const touch = e.touches[0];
+    setPlayerPosition(touch.clientX, touch.clientY);
+  }
+}, { passive: false });
 
     function updateHud() {
       hpEl.textContent = hp;
