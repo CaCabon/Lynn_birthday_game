@@ -1104,12 +1104,15 @@
       if (win) {
         modalTitle.textContent = '🎉 BOSS 已擊敗！';
         modalText.textContent = '太厲害了！妳成功擊敗了邪惡的ㄨ翔，現在來聽首歌吧！';
+        youtubePlayer.src = `https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&rel=0`;
       } else {
         modalTitle.textContent = '💔 失敗了';
         modalText.textContent = '別灰心，再試一次，讓ㄨ翔知道妳最厲害啦！';
+        youtubePlayer.src = '';
+        youtubePlayer.style.display = 'none';
       }
 
-      youtubePlayer.src = `https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&rel=0`;
+      
     }
 
     function handlePointerMove(event) {
