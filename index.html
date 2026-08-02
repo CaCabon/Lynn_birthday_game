@@ -288,6 +288,56 @@
       display: none;
     }
 
+    #start-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(12, 8, 26, 0.72);
+      backdrop-filter: blur(8px);
+    }
+
+    .start-card {
+      width: min(520px, 88vw);
+      background: rgba(255,255,255,0.92);
+      border-radius: 28px;
+      padding: 30px 22px 22px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.24);
+      border: 1px solid rgba(255,255,255,0.5);
+    }
+
+    .start-title {
+      font-size: clamp(28px, 5vw, 42px);
+      font-weight: 900;
+      line-height: 1.4;
+      color: #d63384;
+      margin-bottom: 14px;
+      letter-spacing: 0.04em;
+    }
+
+    .start-note {
+      font-size: 16px;
+      font-weight: 700;
+      color: #5d3b6d;
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+
+    .start-btn {
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #ff5e9a, #ff7eb7);
+      color: white;
+      font-size: 18px;
+      font-weight: 900;
+      padding: 14px 30px;
+      cursor: pointer;
+      box-shadow: 0 12px 22px rgba(255, 94, 154, 0.28);
+    }
+
     #countdown {
       position: absolute;
       inset: 0;
@@ -301,6 +351,7 @@
       color: #fff;
       text-shadow: 0 0 20px rgba(255,255,255,0.6), 0 0 30px rgba(255, 94, 154, 0.6);
       letter-spacing: 0.1em;
+      display: none;
     }
 
     #wave-message {
@@ -432,6 +483,14 @@
       <div class="warning-text">WARNING</div>
     </div>
 
+    <div id="start-screen">
+      <div class="start-card">
+        <div class="start-title">🎂 阿寶寶 20 歲生日大作戰 💖</div>
+        <div class="start-note">🔊 記得先開啟聲音，準備迎接生日大作戰吧！</div>
+        <button id="start-btn" class="start-btn">開始遊戲</button>
+      </div>
+    </div>
+
     <div id="player" class="fighter">
       <img src="女主素材1.jpg" alt="玩家" />
     </div>
@@ -466,6 +525,8 @@
     const bossBarWrap = document.getElementById('boss-bar-wrap');
     const bossBar = document.getElementById('boss-bar');
     const bossNameLabel = document.getElementById('boss-name-label');
+    const startScreen = document.getElementById('start-screen');
+    const startBtn = document.getElementById('start-btn');
 
     let audioCtx = null;
 
@@ -600,6 +661,7 @@
 
     function startCountdown() {
       let count = 3;
+      countdownEl.style.display = 'flex';
       countdownEl.textContent = count;
       const timer = setInterval(() => {
         count -= 1;
@@ -614,6 +676,18 @@
           startWave();
         }
       }, 1000);
+    }
+
+    function startGame() {
+      if (gameStarted || isGameOver) return;
+
+      const ctx = getAudioContext();
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+
+      startScreen.style.display = 'none';
+      startCountdown();
     }
 
     function startWave() {
@@ -1268,7 +1342,7 @@
       setPlayerPosition(window.innerWidth / 2 - player.w / 2, window.innerHeight - 120);
       updateHud();
       scheduleStrawberrySpawn();
-      startCountdown();
+      startBtn.addEventListener('click', startGame);
       requestAnimationFrame(gameLoop);
     }
 
