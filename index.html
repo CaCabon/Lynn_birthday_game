@@ -696,18 +696,18 @@
         ctx.resume().catch(() => {});
       }
 
-     [enemySound, enemy2Sound ,bossSound].forEach(sound => {
-    if (sound) {
-      sound.muted = true; // 先靜音，避免一開始爆出聲音
-      sound.play().then(() => {
-        sound.pause();
-        sound.currentTime = 0;
-        sound.muted = false; // 解除靜音，準備給遊戲中播放
-      }).catch(() => {
-        sound.muted = false;
-      });
-    }
-  });
+  //    [enemySound, enemy2Sound ,bossSound].forEach(sound => {
+  //   if (sound) {
+  //     sound.muted = true; // 先靜音，避免一開始爆出聲音
+  //     sound.play().then(() => {
+  //       sound.pause();
+  //       sound.currentTime = 0;
+  //       sound.muted = false; // 解除靜音，準備給遊戲中播放
+  //     }).catch(() => {
+  //       sound.muted = false;
+  //     });
+  //   }
+  // });
 
       startScreen.style.display = 'none';
       startCountdown();
