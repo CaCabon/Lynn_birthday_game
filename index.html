@@ -12,6 +12,22 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* #player, .fighter, img {
+      -webkit-user-drag: none;        
+      -khtml-user-drag: none;
+      -moz-user-drag: none;
+      -o-user-drag: none;
+    user-drag: none;
+
+  -webkit-user-select: none;     
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  touch-action: none;          
+  pointer-events: auto;
+} */
+
     html, body {
       margin: 0;
       width: 100%;
@@ -492,7 +508,7 @@
     </div>
 
     <div id="player" class="fighter">
-      <img src="girl.jpg" alt="玩家" />
+      <img src="girl.jpg" alt="玩家" draggable="false"/>
     </div>
 
     <div id="modal">
