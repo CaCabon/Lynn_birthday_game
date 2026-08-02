@@ -94,8 +94,8 @@
 
     .fighter {
       position: absolute;
-      width: 82px;
-      height: 82px;
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
       overflow: hidden;
       border: 3px solid rgba(255,255,255,0.9);
@@ -506,6 +506,7 @@
   </div>
 
   <audio id="enemy-sound" src="enemy.m4a" preload="auto"></audio>
+  <audio id="enemy2-sound" src="enemy2.m4a" preload="auto"></audio>
   <audio id="boss-sound" src="boss.m4a" preload="auto"></audio>
 
   <script>
@@ -531,6 +532,7 @@
     const startScreen = document.getElementById('start-screen');
     const startBtn = document.getElementById('start-btn');
     const enemySound = document.getElementById('enemy-sound');
+    const enemy2Sound = document.getElementById('enemy2-sound');
     const bossSound = document.getElementById('boss-sound');
 
     let audioCtx = null;
@@ -565,24 +567,27 @@
       oscillator.stop(ctx.currentTime + duration);
     }
 
-    function playSoundFile(fileName, volume) {
-      try {
-        const audio = new Audio(fileName);
-        audio.volume = volume;
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
-      } catch (error) {
-        console.warn('Audio file could not be played:', fileName, error);
-      }
-    }
+   function playSoundFile(audioObj) {
+  try {
+    // 使用 cloneNode 複製已授權的物件，能支援連續快速滑動擊殺時音效重疊響起
+    const soundClone = audioObj.cloneNode();
+    soundClone.volume = audioObj.volume; // 繼承原本設定的音量
+    soundClone.play().catch(err => {
+      console.warn('Audio file could not be played:', err);
+    });
+  } catch (error) {
+    console.warn('Audio play error:', error);
+  }
+}
 
     function playSoundEffect(name) {
       if (name === 'enemyDie') {
-        playSoundFile('enemy.m4a', 0.9);
+        const randomEnemyAudio = Math.random() < 0.5 ? enemySound : enemy2Sound;
+        playSoundFile(randomEnemyAudio, 1.0);
         return;
       }
       if (name === 'bossDie') {
-        playSoundFile('boss.m4a', 2.0);
+        playSoundFile(bossSound, 1.0);
         return;
       }
     }
@@ -691,12 +696,16 @@
         ctx.resume().catch(() => {});
       }
 
-      [enemySound, bossSound].forEach(sound => {
+     [enemySound, enemy2Sound ,bossSound].forEach(sound => {
     if (sound) {
+      sound.muted = true; // 先靜音，避免一開始爆出聲音
       sound.play().then(() => {
         sound.pause();
         sound.currentTime = 0;
-      }).catch(() => {});
+        sound.muted = false; // 解除靜音，準備給遊戲中播放
+      }).catch(() => {
+        sound.muted = false;
+      });
     }
   });
 
@@ -1195,7 +1204,7 @@
         strawberry.el.style.transform = 'rotate(' + strawberry.rotation + 'deg)';
 
         const strawberryBox = { x: strawberry.x, y: strawberry.y, w: strawberry.w, h: strawberry.h };
-        const playerBox = { x: player.x, y: player.y, w: player.w, h: player.h };
+        const playerBox = { x: player.x-player.w/2, y: player.y-player.h/2, w: player.w, h: player.h };
 
         if (rectsOverlap(strawberryBox, playerBox)) {
           strawberry.el.remove();
@@ -1246,7 +1255,12 @@
         let hit = false;
 
         if (boss && boss.hp > 0) {
-          const bossBox = { x: boss.x, y: boss.y, w: boss.w, h: boss.h };
+          const bossBox = { 
+          x: boss.x + boss.w * 0.1, 
+          y: boss.y + boss.h * 0.1, 
+          w: boss.w * 0.8, 
+          h: boss.h * 0.8 
+          };
           const bulletBox = { x: bullet.x, y: bullet.y, w: bullet.w, h: bullet.h };
           if (rectsOverlap(bulletBox, bossBox)) {
             hit = true;
@@ -1267,8 +1281,14 @@
         if (!hit) {
           for (let j = enemies.length - 1; j >= 0; j--) {
             const enemyObj = enemies[j];
-            const enemyBox = { x: enemyObj.x, y: enemyObj.y, w: enemyObj.w, h: enemyObj.h };
+            const enemyBox = { 
+             x: enemyObj.x + enemyObj.w * 0.05, 
+             y: enemyObj.y + enemyObj.h * 0.05, 
+             w: enemyObj.w * 0.9, 
+             h: enemyObj.h * 0.9 
+            };
             const bulletBox = { x: bullet.x, y: bullet.y, w: bullet.w, h: bullet.h };
+
             if (rectsOverlap(bulletBox, enemyBox)) {
               hit = true;
               enemyObj.hp -= 1;
@@ -1320,7 +1340,7 @@
           bullet.el.style.top = bullet.y + 'px';
         }
 
-        const hitboxScale = 0.25;
+        const hitboxScale = 1.0;
         const playerBox = {
           x: player.x + (player.w * (1 - hitboxScale)) / 2,
           y: player.y + (player.h * (1 - hitboxScale)) / 2,
